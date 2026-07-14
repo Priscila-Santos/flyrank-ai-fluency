@@ -167,6 +167,8 @@ My manual work mainly involved:
 
 * Validating the generated code before integrating it into the project.
 * Refining prompts to improve the quality of the generated solutions.
+* Identifying and fixing a missing stylesheet import (`Header.css`) that prevented the header styles from being applied correctly.
+* Improving the task statistics section by redesigning it into card-style elements with better spacing and visual hierarchy.
 * Making small adjustments to the user interface and application layout.
 * Testing the application and correcting minor issues when necessary.
 * Reviewing the AI suggestions and deciding which recommendations should be applied.
