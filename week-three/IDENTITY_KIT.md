@@ -101,6 +101,18 @@ Two vibrant accents intentionally: a **magenta/rose** ("pop pink") for the prima
 - Both are black-on-off-white; on dark backgrounds, keep them as-is inside a light card/chip rather than recoloring, to avoid distorting the mark.
 - Minimum clear space around the monogram: roughly the height of the "P" stroke, on all sides.
 
+--- 
+
+## Logo image
+
+### Primary Logo
+
+<img src="./assets/PS-logo.png" alt="Priscila Santos logo" width="300">
+
+### Favicon / Icon
+
+<img src="./assets/PS-icon.png" alt="PS monogram" width="120">
+
 ---
 
 ## 4. Style Note
