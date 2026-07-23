@@ -1,0 +1,27 @@
+## What an Agent Is, What MCP Is, and What FL-04 Would Need to Become One
+
+### Agents vs. workflows
+
+Anthropic's engineering team draws a sharp line that's worth internalizing before calling anything an "agent." Anthropic categorizes agent-like systems under the umbrella term "agentic systems," but distinguishes between workflows, where LLMs and tools are orchestrated through predefined code paths, and agents, where LLMs dynamically direct their own process and tool use, staying in control of how a task gets done.
+
+FL-04 is a workflow in exactly this sense. It's a fixed sequence — NotebookLM summarizes, ChatGPT drafts, critiques andformats — and the pipeline never deviates from that order regardless of what the source material contains. That's not a criticism; Anthropic's own guidance is to find the simplest solution possible and only add complexity when it's actually needed, since agentic systems trade latency and cost for task performance, and that tradeoff has to be worth it. In fact, FL-04 already resembles one of Anthropic's named workflow patterns almost exactly: prompt chaining, where a task is decomposed into a sequence of steps and each LLM call processes the output of the previous one, optionally with programmatic checks at intermediate steps to keep things on track. Step 3 of FL-04 (the critique pass) is effectively that kind of gate.
+
+What would make FL-04 an *agent* rather than a chain is the model itself deciding what to do next, rather than a human (or a fixed script) deciding for it. Agents begin with a command or a discussion with the user, then plan and operate independently once the task is clear, potentially looping back to the human for input, and crucially they check in with the real environment at each step — tool results, execution output — to judge their own progress, pausing at checkpoints or when they hit a stopping condition like a max number of iterations. That last part matters most for FL-04: right now there's no environment to check in with. A human has to look at the NotebookLM summary, decide it's good enough, and manually paste it into ChatGPT. Nothing in the pipeline can tell, on its own, "this source didn't actually cover the concept I need, go find more" or "the quiz questions don't match the notes, redo step 2."
+
+### What MCP is, and why it's the missing plumbing
+
+Right now FL-04's handoffs are manual: copy-paste from NotebookLM's output box into ChatGPT's input box. That's fine for a five-run test, but it's also exactly the kind of glue an agent would need automated to act on its own.
+
+This is where MCP comes in. MCP is an open-source standard for connecting AI applications to external systems — letting something like Claude or ChatGPT reach data sources such as local files or databases, tools such as search engines or calculators, and workflows such as specialized prompts, so it can pull in information and actually perform tasks. The official framing is a USB-C port for AI applications: a standardized connector rather than a bespoke integration for every tool. Anthropic's own agent-building essay treats this as the natural implementation path for the "augmented LLM" building block: one way to give a model retrieval, tools, and memory is through MCP, which lets developers plug into a growing ecosystem of third-party tools with a fairly simple client.
+
+Concretely, for FL-04 that means: instead of a human moving text between two chat windows, an MCP-connected agent would have a *file-reading tool* (to pull the PDF or slides directly), a *notebook/summarization tool* (or just do that step itself, since a modern LLM doesn't strictly need NotebookLM as a separate app), and enough context retained across the four steps that it can loop back — rereading the source if the critique step flags a gap, rather than a human doing that check by eye.
+
+### What FL-04 would actually need to change
+
+Three concrete gaps stand between the current pipeline and something Anthropic would call an agent rather than a workflow:
+
+1. **Tool access instead of copy-paste.** The model needs direct read access to the PDF/slides/article (an MCP file or document tool) and a way to write the final sheet somewhere, rather than a human relaying text between two separate products.
+2. **A decision loop, not a fixed four-step script.** Step 3 (review) currently always leads to step 4 (format). An agent version would let the review step decide: is this good enough to format, or does it need to go back to the source for more detail first? That's the difference between a scripted "gate" and genuine model-directed control — and it needs a stopping condition (e.g., max two revision passes) so it doesn't loop forever, following the same stopping-condition principle Anthropic recommends for keeping agents under control.
+3. **Grounding checks as an actual tool call, not an instruction.** FL-04 relies on prompts like "do not invent information" — good practice, but it's just a request. A more agentic version would let the model call a tool to re-check its own notes against the source text before finalizing, closing the loop with real environmental feedback rather than trusting its own unverified output.
+
+None of this requires abandoning FL-04's structure — the four stages are still the right shape. What's missing is giving the model the tools and the authority to move between them itself, and a way to tell when it's actually done, rather than a human doing every handoff by hand.
