@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FE-AA1 · Buttons with a Brain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0b0f19;
+    --card: #161e2e;
+    --border: #243044;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --pink: #fb7185;
+    --pink-hover: #f43f5e;
+    --success: #10b981;
+    --error: #ef4444;
+    --ring: #38bdf8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pink);
+  }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw + 1rem, 2.75rem);
+    margin: 0.4rem 0 0.75rem;
+  }
+  p.lead { color: var(--text-muted); max-width: 46ch; }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin: 2.5rem 0 0.75rem;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  label.toggle {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.875rem; color: var(--text-muted); margin-top: 0.75rem;
+  }
+  .note {
+    margin-top: 3rem;
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    font-size: 0.9rem;
+  }
+  .note ul { padding-left: 1.1rem; margin: 0.5rem 0 0; }
+  .note li { margin-bottom: 0.6rem; }
+  code {
+    font-family: 'Space Mono', monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.8em;
+  }
+
+  /* ---- the button itself ---- */
+  .btn {
+    position: relative;
+    height: 2.5rem;
+    width: 12rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--pink);
+    color: #1a0508;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out, background-color 200ms ease-out;
+  }
+  .btn:hover:not(:disabled) {
+    background: var(--pink-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -8px rgba(244,63,94,0.55);
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 100ms;
+    transition-timing-function: ease-in;
+  }
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.5), 0 0 0 1px var(--ring);
+  }
+  .btn:disabled { cursor: not-allowed; opacity: 0.5; box-shadow: none; transform: none; }
+
+  .btn[data-state="success"] { background: var(--success); color: #052e20; }
+  .btn[data-state="success"]:hover { background: var(--success); }
+  .btn[data-state="error"] { background: var(--error); color: #300707; animation: shake 420ms ease-in-out; }
+  .btn[data-state="error"]:hover { background: var(--error); }
+
+  .layer {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: opacity 200ms cubic-bezier(0.4,0,0.2,1), transform 200ms cubic-bezier(0.4,0,0.2,1);
+  }
+  .layer.idle-layer { transform: translateX(0); opacity: 1; }
+  .btn[data-state="loading"] .idle-layer { transform: translateX(-6px); opacity: 0; }
+  .layer.loading-layer { transform: translateX(6px); opacity: 0; }
+  .btn[data-state="loading"] .loading-layer { transform: translateX(0); opacity: 1; }
+
+  .icon { width: 16px; height: 16px; flex: none; }
+  .spinner { animation: spin 700ms linear infinite; }
+  .check-icon { animation: pop 320ms cubic-bezier(0.34,1.56,0.64,1); }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+  }
+
+  /* Live "simulate reduced motion" toggle, since we can't flip the real OS setting on demand */
+  .reduce-motion .btn,
+  .reduce-motion .layer {
+    transition-duration: 0.01ms !important;
+  }
+  .reduce-motion .btn[data-state="error"],
+  .reduce-motion .spinner,
+  .reduce-motion .check-icon {
+    animation: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .layer { transition-duration: 0.01ms !important; }
+    .btn[data-state="error"], .spinner, .check-icon { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">FE-AA1 · Build+</p>
+  <h1>Buttons with a Brain</h1>
+  <p class="lead">
+    Click to run a fake async call (20% failure rate). Use the forced
+    triggers to see success and error on demand without relying on luck.
+  </p>
+
+  <h2>Random outcome</h2>
+  <div class="row">
+    <button class="btn" data-action="random" data-label-idle="Send message" data-label-loading="Sending…" data-icon-idle="send">
+      <span class="layer idle-layer"><svg class="icon" data-icon="send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg><span class="label">Send message</span></span>
+      <span class="layer loading-layer"><svg class="icon spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Sending…</span></span>
+    </button>
+
+    <button class="btn" data-action="random" data-label-idle="Deploy" data-label-loading="Deploying…" data-icon-idle="rocket">
+      <span class="layer idle-layer"><svg class="icon" data-icon="rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg><span class="label">Deploy</span></span>
+      <span class="layer loading-layer"><svg class="icon spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Deploying…</span></span>
+    </button>
+  </div>
+
+  <label class="toggle">
+    <input type="checkbox" id="disabled-toggle" />
+    Disabled state
+  </label>
+  <label class="toggle">
+    <input type="checkbox" id="reduce-motion-toggle" />
+    Simulate prefers-reduced-motion
+  </label>
+
+  <h2>Forced triggers</h2>
+  <div class="row">
+    <button class="btn" data-action="success" data-label-idle="Send message" data-label-loading="Sending…" data-icon-idle="send">
+      <span class="layer idle-layer"><svg class="icon" data-icon="send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg><span class="label">Send message</span></span>
+      <span class="layer loading-layer"><svg class="icon spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Sending…</span></span>
+    </button>
+    <button class="btn" data-action="error" data-label-idle="Send message" data-label-loading="Sending…" data-icon-idle="send">
+      <span class="layer idle-layer"><svg class="icon" data-icon="send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg><span class="label">Send message</span></span>
+      <span class="layer loading-layer"><svg class="icon spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span>Sending…</span></span>
+    </button>
+  </div>
+  <p class="lead" style="margin-top:0.75rem;">Left always succeeds. Right always fails.</p>
+
+  <div class="note">
+    <strong>Duration &amp; easing choices</strong>
+    <ul>
+      <li><strong>Hover 150ms / press 100ms:</strong> hover eases out (decelerates into the lift), press eases in (snaps down) — opposite curves so they read as opposite gestures, not one tween reversed.</li>
+      <li><strong>Content cross-fade 200ms, <code>cubic-bezier(0.4,0,0.2,1)</code>:</strong> two absolutely-stacked layers swap opacity + a small translate only — the button's box never resizes, so nothing else on the page reflows.</li>
+      <li><strong>Spinner 700ms linear, infinite:</strong> linear on purpose — an eased spinner has nothing to accelerate toward, so easing it just looks broken.</li>
+      <li><strong>Success check 320ms, <code>cubic-bezier(0.34,1.56,0.64,1)</code>:</strong> slight overshoot ("back-out") so it feels rewarding, not just correct.</li>
+      <li><strong>Error shake 420ms ease-in-out:</strong> short and sharp — registers as deliberate feedback without delaying the "Retry" label.</li>
+      <li><strong>Reduced motion:</strong> toggle above simulates <code>prefers-reduced-motion: reduce</code> live. Color and label changes stay instant; only the glide/spin/shake/pop are removed.</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+  function fakeRequest(forceFail) {
+    var delay = 700 + Math.random() * 900;
+    var willFail = typeof forceFail === 'boolean' ? forceFail : Math.random() < 0.2;
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () { willFail ? reject(new Error('simulated')) : resolve(); }, delay);
+    });
+  }
+
+  var disabledToggle = document.getElementById('disabled-toggle');
+  var reduceToggle = document.getElementById('reduce-motion-toggle');
+
+  reduceToggle.addEventListener('change', function () {
+    document.documentElement.classList.toggle('reduce-motion', reduceToggle.checked);
+  });
+
+  document.querySelectorAll('.btn').forEach(function (btn) {
+    var resetTimer = null;
+    var requestId = 0;
+
+    function setState(state) {
+      btn.dataset.state = state;
+    }
+
+    disabledToggle.addEventListener('change', function () {
+      btn.disabled = disabledToggle.checked && btn.dataset.state !== 'loading';
+    });
+
+    btn.addEventListener('click', function () {
+      if (btn.disabled || btn.dataset.state === 'loading') return;
+      if (resetTimer) clearTimeout(resetTimer);
+
+      var myRequest = ++requestId;
+      setState('loading');
+
+      var action = btn.dataset.action;
+      var promise = action === 'success' ? fakeRequest(false)
+        : action === 'error' ? fakeRequest(true)
+        : fakeRequest();
+
+      promise.then(function () {
+        if (requestId !== myRequest) return;
+        setState('success');
+        var checkSvg = '<svg class="icon check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>';
+        btn.querySelector('.idle-layer').innerHTML = checkSvg + '<span>Sent</span>';
+      }).catch(function () {
+        if (requestId !== myRequest) return;
+        setState('error');
+        var retrySvg = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>';
+        btn.querySelector('.idle-layer').innerHTML = retrySvg + '<span>Retry</span>';
+        // restart the shake even if a previous one is mid-flight
+        btn.style.animation = 'none';
+        void btn.offsetWidth;
+        btn.style.animation = '';
+      });
+
+      resetTimer = setTimeout(function () {
+        setState('idle');
+        var sendSvg = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7Z"/></svg>';
+        var rocketSvg = document.querySelector('[data-icon-idle="rocket"] .idle-layer svg') ? btn.querySelector('.idle-layer') : null;
+        var isRocket = btn.dataset.iconIdle === 'rocket' || btn.getAttribute('data-icon-idle') === 'rocket';
+        btn.querySelector('.idle-layer').innerHTML = (isRocket
+          ? '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>'
+          : sendSvg) + '<span>' + btn.dataset.labelIdle + '</span>';
+      }, 1400);
+    });
+  });
+</script>
+</body>
+</html>
