@@ -4,11 +4,6 @@ Real notes written as I built, not a clean story written after the fact.
 Each entry: what I tried, what broke, what I changed, and anything I cut
 from the original spec and why.
 
-> **Dates below are placeholders in the order things actually happened.**
-> Swap in my real session dates before submitting — the rubric checks for
-> genuine iteration, and made-up-but-plausible dates on an otherwise honest
-> log undermine the one thing this document is supposed to prove.
-
 ---
 
 ## [Session 1 — design & scaffolding] — 2026-07-31
