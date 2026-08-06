@@ -10,7 +10,9 @@ Two passes, done in this order:
 1. **Manual code + keyboard audit** — read every page/component for landmark structure, label presence, focus-visible styling, ARIA usage on the chat stream, and JS-loading strategy. Then tabbed through the primary flow (Home → AI Assistant → send a message → Stop) using keyboard only, no mouse.
 2. **Instrumented audit** — Lighthouse (mobile preset, DevTools) + WAVE extension, run against the deployed preview after the fixes below were applied.
 
-*(Fill in the screenshots/numbers for step 2 below)*
+*(Fill in the screenshots/numbers for step 2 below — those need a real Chrome session and aren't something I can run from here.)*
+
+**Screenshot convention:** captured with Chrome DevTools → Lighthouse tab, mobile preset. Full reports exported as PDF for backup/proof; the score-circle strip cropped to PNG for inline display here. Stored in `audit-assets/` alongside this file, named `{before,after}-{page}-lighthouse.png`.
 
 ---
 
@@ -28,25 +30,76 @@ Two passes, done in this order:
 
 Only three of seven pages needed a full separate Lighthouse pass: `/` as the representative for the static-content pages (Work/About/Contact/Playground share the same low-JS profile), `/ai` for the streaming-chat profile, and `/lab/3d` for the heavy-WebGL profile. This is why the first run (against `/` alone, which also happened to fail with `NO_FCP` because the tab lost focus mid-audit) wasn't sufficient — the site has three technically distinct page types, and the worst score by far (`/lab/3d`) would have gone undetected auditing only the homepage.
 
-`[screenshot: before-lighthouse-home.png]`
-`[screenshot: before-lighthouse-ai.png]`
-`[screenshot: before-lighthouse-lab3d.png]`
+![Lighthouse mobile — Home, before fixes](./audit-assets/before-home-lighthouse.png)
+![Lighthouse mobile — AI Assistant, before fixes](./audit-assets/before-ai-lighthouse.png)
+![Lighthouse mobile — 3D Lab, before fixes (68/100 — fails rubric minimum)](./audit-assets/before-lab3d-lighthouse.png)
 
-## ⚠️ Critical finding: `/lab/3d` fails the rubric's performance minimum
+## ⚠️ Critical finding: `/lab/3d` fails the rubric's performance minimum (confirmed + fixed)
 
-Total Blocking Time of **6,520ms** and 20 long main-thread tasks on a page that's supposed to gate its heavy JS behind an opt-in step. `features/three/components/model-viewer.tsx` auto-enables the WebGL canvas when the device "qualifies" (WebGL present + no `prefers-reduced-motion` + no low-power/data-saver signal from `navigator.connection`/`navigator.deviceMemory`). On the Moto G Power + Slow 4G emulation Lighthouse uses, that auto-enable check apparently still passed — meaning Lighthouse loaded and executed the full Three.js/fiber/drei/leva bundle and rendered the Duck model on the very first paint, instead of showing the static fallback first as the design intends.
+**Before:** Performance 68, Accessibility 96, TBT 6,240–6,520ms, Speed Index 3.7–3.8s, 20 long main-thread tasks, "Minimize main-thread work" flagged at 12.9s.
 
-**Two ways to fix, in order of how much they change the UX:**
-1. **Tighten the auto-enable heuristic** so it also checks something Slow-4G-throttling actually triggers reliably (e.g. treat `effectiveType !== "4g"` as low-power, not just `"slow-2g"/"2g"/"3g"`), so a throttled connection correctly lands on the fallback.
-2. **Remove auto-enable entirely** and always require the explicit "Enable 3D view" tap. Simpler, guaranteed to fix the score, but changes intended behavior for capable desktop users who currently get the canvas for free.
+**Root cause, confirmed from the extended report:**
+1. `<Environment preset="city">` (drei) fetches a **1.5MB** HDR file (`potsdamer_platz_1k.hdr`, served from `raw.githubusercontent.com`) on first render.
+2. The auto-enable heuristic in `ModelViewer` (`features/three/components/model-viewer.tsx`) — meant to only skip the static fallback on genuinely capable devices — fired even under the Moto G Power + Slow 4G emulation Lighthouse uses for mobile audits, meaning the full Three.js/fiber/drei/leva bundle plus that 1.5MB texture loaded and executed on the very first paint instead of showing the fallback first.
+3. This produced 2,156 KiB of total network payload and 12.9s of main-thread work on a single page load — exactly the eager-loading behavior the fallback-first design was supposed to prevent.
 
-Re-run Lighthouse on `/lab/3d` after whichever fix is applied — this is the one page that must clear 80 before this deliverable is done.
+**Result confirmed:** Performance jumped from 68 to **87** (clears the 80 rubric minimum). TBT dropped from 6,240ms to 440ms, total payload dropped from 2,156 KiB to 650 KiB, CLS improved to 0.004.
 
-## ⚠️ Unresolved: contrast check needs the specific element
+## Follow-up finding: fixing the auto-enable bug exposed two real markup bugs
 
-Both `/` and `/lab/3d` flag "Background and foreground colors do not have a sufficient contrast ratio," but the exported PDF only shows the summary line, not which element failed — that only shows up if the check's `⌄` arrow is expanded *before* exporting to PDF.
+Accessibility on `/lab/3d` dropped slightly, from 96 to **94** — not a regression from the fix itself, but two pre-existing bugs that were invisible before because the eagerly-loaded 3D canvas covered up the fallback markup. Now that the static fallback is what every visitor actually sees first, Lighthouse could finally audit it.
 
-**Action needed:** re-run Lighthouse on `/`, click to expand the failing contrast audit, and either screenshot the element list or copy the flagged selector/color pair here. Until then this can't be fixed with confidence — my manual token-contrast check (see "Manual audit findings" below) showed the primary/accent/muted-foreground combinations all passing on paper, so the failure is likely either a specific state (e.g. a hover/disabled color) or a token used in a spot I didn't check (e.g. the nav's `hover:text-accent` against the header's actual background, or a shadcn default I haven't audited, like `--secondary-foreground` on `--secondary`).
+**Bug 1 (the important one): `text-primary-foreground` doesn't actually exist in this Tailwind build.** The failing element is the "Enable 3D view" button (`bg-primary ... text-primary-foreground`). Root cause, found in `tailwind.config.ts`: `primary` is defined as a flat color —
+
+```ts
+primary: "rgb(var(--color-primary) / <alpha-value>)",
+```
+
+— instead of the `{ DEFAULT, foreground }` object shadcn expects (like `card`, `secondary`, `muted` in the same file). Without that `foreground` key, the `text-primary-foreground` utility is **never generated** — it has no effect. The button text falls back to the default near-black `text-foreground`, rendered on a dark navy background (`--color-primary: 30 64 175`). Near-black text on dark navy is a real contrast failure, not a false positive.
+
+This is very likely the same bug behind Home's earlier unresolved contrast flag (its "Try the AI Assistant" link uses the exact same `bg-primary text-primary-foreground` pairing, as does shadcn's `Button` `default` variant) — fixing it in one place should clear both.
+
+```diff
+// tailwind.config.ts
+colors: {
+- primary: "rgb(var(--color-primary) / <alpha-value>)",
++ primary: {
++   DEFAULT: "rgb(var(--color-primary) / <alpha-value>)",
++   foreground: "#ffffff",
++ },
+  accent: "rgb(var(--color-accent) / <alpha-value>)",
+```
+
+White on the navy background (`30 64 175`) computes to ~8.7:1 — clears AAA.
+
+**Bug 2: heading order skips a level.** Failing element: `h3.text-base.font-semibold.text-card-foreground`, the title inside `SceneFallback` (`features/three/components/scene-fallback.tsx`). The page has `<h1>3D model viewer</h1>` then jumps straight to this `<h3>`, skipping `<h2>`.
+
+```diff
+// features/three/components/scene-fallback.tsx
+- <h3 className="text-base font-semibold text-card-foreground">{title}</h3>
++ <h2 className="text-base font-semibold text-card-foreground">{title}</h2>
+```
+
+**Action needed:** apply both fixes, then re-run Lighthouse on both `/lab/3d` and `/` (the `tailwind.config.ts` fix affects Home too, and should resolve its still-unidentified contrast flag from the earlier run).
+
+*(Minor, non-blocking: the same extended report flagged a small CLS culprit — `p.text-xs.text-muted-foreground`, the filename caption overlay, contributing 0.004 to a total CLS of 0.008. Still well within the "good" <0.1 threshold, so left as-is; noted here for completeness.)*
+
+## Contrast — element identified and fixed
+
+The extended `/lab/3d` report named the exact failing elements: `code.rounded.bg-muted.px-1.py-0.5.text-xs` (the `.glb` and `THREE_D_EXPERIENCE_README.md` inline code tags in `app/lab/3d/page.tsx`). They inherit `text-muted-foreground` against a `bg-muted` background — a combination that clears 4.5:1 on pure white (`--background`) but not on the slightly darker `--muted` gray.
+
+**Fix:**
+
+```diff
+- <code className="rounded bg-muted px-1 py-0.5 text-xs">.glb</code>
++ <code className="rounded bg-muted px-1 py-0.5 text-xs text-foreground">.glb</code>
+```
+
+(same change for the `THREE_D_EXPERIENCE_README.md` code tag on the same page.)
+
+Home's contrast failure (flagged in the same run, same message) still needs its element expanded in a re-run to confirm whether it's the same `bg-muted`/`text-muted-foreground` pattern elsewhere, or a different element — Home has no `<code>` tags, so it's a separate instance.
+
+**Scope note:** this is a targeted token-pairing bug, not a reason to migrate to the full Identity Kit dark-mode/typography system yet — that migration is real but out of scope for FE-10 (already tracked in `FEEDBACK.md`'s still-ugly list). Fixing this one pairing clears the automated check without opening that larger migration.
 
 ## Before — WAVE
 
@@ -148,8 +201,9 @@ Primary flow is keyboard-completable end to end. No dead ends or keyboard traps 
 | `/` | _fill in_ | _fill in_ | _fill in_ | _fill in_ |
 | `/ai` | _fill in_ | _fill in_ | _fill in_ | _fill in_ |
 
-`[screenshot: after-lighthouse-home.png]`
-`[screenshot: after-lighthouse-ai.png]`
+![Lighthouse mobile — Home, after fixes](./audit-assets/after-home-lighthouse.png)
+![Lighthouse mobile — AI Assistant, after fixes](./audit-assets/after-ai-lighthouse.png)
+![Lighthouse mobile — 3D Lab, after fixes](./audit-assets/after-lab3d-lighthouse.png)
 
 ## After — WAVE, post-fix
 
