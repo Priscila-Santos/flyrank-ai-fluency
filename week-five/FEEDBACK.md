@@ -10,3 +10,13 @@ Still ugly list:
 - Playground page has no framing — it's evidence I understand accessible component internals (focus traps, ARIA, keyboard nav vs. shadcn's headless equivalents), but a visitor has no way to know that's the point without me telling them.
 - No images yet — all screenshots and the professional portrait planned in my image inventory are still missing.
 - Dark mode and the full Identity Kit typography/color system are documented but not wired into app/globals.css yet.
+- Personal portrait, logo placement, and real project screenshots
+  (IDENTITY_KIT.md and CURATED_IMAGES.md from Week 3) are defined but not
+  yet applied to the live site — this week's focus was mobile responsiveness
+  and breakage, not visual identity, so this is deliberately deferred to a
+  dedicated polish pass.
+- Work page only lists 4 case studies; the psychologist website project
+  (mentioned in week-two/FRAMED_CASES.md Case Study 3) is written up but not
+  yet added to app/work/page.tsx, and has no screenshots yet either.
+- No favicon/logo currently wired into app/layout.tsx despite PS-logo.png
+  and PS-icon.png already existing in the Identity Kit assets.
