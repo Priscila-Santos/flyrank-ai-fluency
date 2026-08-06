@@ -36,3 +36,16 @@ demonstrated (see week-five/FEEDBACK.md).
   screenshots have been added yet — tracked separately, see Still Ugly List).
 - No layout breaks at 375px, 768px, or 1280px+.
 - Text size and contrast readable on a real device screen.
+
+## Before the changes
+| Menu |  3D Lab | Playground |
+|------|--------------|--------|
+| <img src="./audit-assets/before-home-lighthouse.png" alt="Home" width="250"/> | <img src="./audit-assets/before-lab3d-lighthouse.png" alt="3D Lab" width="250"/> | <img src="./audit-assets/before-playground-mobile-fix.png" alt="Playground" width="250"/> |
+| *Mobile — Menu, before the corrections* |  *Mobile — 3D Lab, before the corrections* | *Mobile — Playground, before the corrections* |
+
+## After the changes
+| Menu | 3D Lab | Playground |
+|------|--------------|--------|
+| <img src="./audit-assets/after-menu-mobile-fix.jpg" alt="Home" width="250"/> | <img src="./audit-assets/after-3dlab-mobile-fix.jpg" alt="3D Lab" width="250"/> | <img src="./audit-assets/after-playground-mobile-fix.jpg" alt="Playground" width="250"/> |
+| *Mobile — Menu, after the corrections* |  *Mobile — 3D Lab, after the corrections* | *Mobile — Playground, after the corrections* |
+
