@@ -22,7 +22,7 @@ Two passes, done in this order:
 |---|---|---|---|---|---|
 | `/` | **91** | **95** | 100 | 100 | TBT 370ms, CLS 0. Contrast check failing (element TBD — see below). |
 | `/ai` | **87** | **100** | 100 | 100 | TBT 400ms. "Reduce unused JavaScript" flags ~127 KiB. |
-| `/work` | _not yet run_ | _not yet run_ | | | Same page profile as `/`; lower priority to re-test separately. |
+| `/work` | **95** | **100** | 100 | 100 | Same page profile as `/`; lower priority to re-test separately. |
 | `/about` | _not yet run_ | _not yet run_ | | | Same page profile as `/`. |
 | `/contact` | _not yet run_ | _not yet run_ | | | Same page profile as `/`. |
 | `/playground` | _not yet run_ | _not yet run_ | | | Contains three hand-built interactive components; worth its own pass. |
@@ -30,9 +30,10 @@ Two passes, done in this order:
 
 Only three of seven pages needed a full separate Lighthouse pass: `/` as the representative for the static-content pages (Work/About/Contact/Playground share the same low-JS profile), `/ai` for the streaming-chat profile, and `/lab/3d` for the heavy-WebGL profile. This is why the first run (against `/` alone, which also happened to fail with `NO_FCP` because the tab lost focus mid-audit) wasn't sufficient — the site has three technically distinct page types, and the worst score by far (`/lab/3d`) would have gone undetected auditing only the homepage.
 
-![Lighthouse mobile — Home, before fixes](./audit-assets/before-home-lighthouse.png)
-![Lighthouse mobile — AI Assistant, before fixes](./audit-assets/before-ai-lighthouse.png)
-![Lighthouse mobile — 3D Lab, before fixes (68/100 — fails rubric minimum)](./audit-assets/before-lab3d-lighthouse.png)
+| Home | AI Assistant | 3D Lab |
+|------|--------------|--------|
+| <img src="./audit-assets/before-home-lighthouse.png" alt="Home" width="250"/> | <img src="./audit-assets/before-ai-lighthouse.png" alt="AI Assistant" width="250"/> | <img src="./audit-assets/before-lab3d-lighthouse.png" alt="3D Lab" width="250"/> |
+| *Lighthouse mobile — Home, before the corrections* | *Lighthouse mobile — AI Assistant, before the corrections* | *Lighthouse mobile — 3D Lab, before the corrections (68/100 — falha no mínimo do rubric)* |
 
 ## ⚠️ Critical finding: `/lab/3d` fails the rubric's performance minimum (confirmed + fixed)
 
@@ -201,9 +202,10 @@ Primary flow is keyboard-completable end to end. No dead ends or keyboard traps 
 | `/` | _fill in_ | _fill in_ | _fill in_ | _fill in_ |
 | `/ai` | _fill in_ | _fill in_ | _fill in_ | _fill in_ |
 
-![Lighthouse mobile — Home, after fixes](./audit-assets/after-home-lighthouse.png)
-![Lighthouse mobile — AI Assistant, after fixes](./audit-assets/after-ai-lighthouse.png)
-![Lighthouse mobile — 3D Lab, after fixes](./audit-assets/after-lab3d-lighthouse.png)
+| Home | AI Assistant | 3D Lab |
+|------|--------------|--------|
+| <img src="./audit-assets/after-home-lighthouse.png" alt="Home" width="250"/> | <img src="./audit-assets/after-ai-lighthouse.png" alt="AI Assistant" width="250"/> | <img src="./audit-assets/after-lab3d-lighthouse.png" alt="3D Lab" width="250"/> |
+| *Lighthouse mobile — Home, after the corrections* | *Lighthouse mobile — AI Assistant, after the corrections* | *Lighthouse mobile — 3D Lab, after the corrections (68/100 — falha no mínimo do rubric)* |
 
 ## After — WAVE, post-fix
 
