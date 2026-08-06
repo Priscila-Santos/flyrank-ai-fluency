@@ -10,8 +10,6 @@ Two passes, done in this order:
 1. **Manual code + keyboard audit** — read every page/component for landmark structure, label presence, focus-visible styling, ARIA usage on the chat stream, and JS-loading strategy. Then tabbed through the primary flow (Home → AI Assistant → send a message → Stop) using keyboard only, no mouse.
 2. **Instrumented audit** — Lighthouse (mobile preset, DevTools) + WAVE extension, run against the deployed preview after the fixes below were applied.
 
-*(Fill in the screenshots/numbers for step 2 below — those need a real Chrome session and aren't something I can run from here.)*
-
 **Screenshot convention:** captured with Chrome DevTools → Lighthouse tab, mobile preset. Full reports exported as PDF for backup/proof; the score-circle strip cropped to PNG for inline display here. Stored in `audit-assets/` alongside this file, named `{before,after}-{page}-lighthouse.png`.
 
 ---
@@ -102,15 +100,6 @@ Home's contrast failure (flagged in the same run, same message) still needs its 
 
 **Scope note:** this is a targeted token-pairing bug, not a reason to migrate to the full Identity Kit dark-mode/typography system yet — that migration is real but out of scope for FE-10 (already tracked in `FEEDBACK.md`'s still-ugly list). Fixing this one pairing clears the automated check without opening that larger migration.
 
-## Before — WAVE
-
-| Page | Errors | Contrast errors | Alerts |
-|---|---|---|---|
-| `/` | _fill in_ | _fill in_ | _fill in_ |
-| `/ai` | _fill in_ | _fill in_ | _fill in_ |
-
-`[screenshot: before-wave-home.png]`
-
 ---
 
 ## Manual audit findings
@@ -199,34 +188,13 @@ Primary flow is keyboard-completable end to end. No dead ends or keyboard traps 
 
 | Page | Performance | Accessibility | Best Practices | SEO |
 |---|---|---|---|---|
-| `/` | _fill in_ | _fill in_ | _fill in_ | _fill in_ |
-| `/ai` | _fill in_ | _fill in_ | _fill in_ | _fill in_ |
+| `/` | **93** | **100** | **100** | **100** |
+| `/ai` | **94** | **100** | **100** | **100** |
 
 | Home | AI Assistant | 3D Lab |
 |------|--------------|--------|
 | <img src="./audit-assets/after-home-lighthouse.jpg" alt="Home" width="250"/> | <img src="./audit-assets/after-ai-lighthouse.jpg" alt="AI Assistant" width="250"/> | <img src="./audit-assets/after-lab3d-lighthouse.jpg" alt="3D Lab" width="250"/> |
 | *Lighthouse mobile — Home, after the corrections* | *Lighthouse mobile — AI Assistant, after the corrections* | *Lighthouse mobile — 3D Lab, after the corrections (68/100 — falha no mínimo do rubric)* |
-
-## After — WAVE, post-fix
-
-| Page | Errors | Contrast errors | Alerts |
-|---|---|---|---|
-| `/` | _fill in_ | _fill in_ | _fill in_ |
-| `/ai` | _fill in_ | _fill in_ | _fill in_ |
-
----
-
-## Deltas
-
-_Fill in once before/after numbers are in — this is the section the rubric checks for "measurable deltas."_
-
-| Metric | Before | After | Δ |
-|---|---|---|---|
-| Home — Accessibility | | | |
-| Home — Performance | | | |
-| AI page — Accessibility | | | |
-| AI page — Performance | | | |
-| WAVE errors (site-wide) | | | |
 
 ## Remaining / justified items
 
