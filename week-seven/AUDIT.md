@@ -204,7 +204,7 @@ Primary flow is keyboard-completable end to end. No dead ends or keyboard traps 
 
 | Home | AI Assistant | 3D Lab |
 |------|--------------|--------|
-| <img src="./audit-assets/after-home-lighthouse.png" alt="Home" width="250"/> | <img src="./audit-assets/after-ai-lighthouse.png" alt="AI Assistant" width="250"/> | <img src="./audit-assets/after-lab3d-lighthouse.png" alt="3D Lab" width="250"/> |
+| <img src="./audit-assets/after-home-lighthouse.jpg" alt="Home" width="250"/> | <img src="./audit-assets/after-ai-lighthouse.jpg" alt="AI Assistant" width="250"/> | <img src="./audit-assets/after-lab3d-lighthouse.jpg" alt="3D Lab" width="250"/> |
 | *Lighthouse mobile — Home, after the corrections* | *Lighthouse mobile — AI Assistant, after the corrections* | *Lighthouse mobile — 3D Lab, after the corrections (68/100 — falha no mínimo do rubric)* |
 
 ## After — WAVE, post-fix
