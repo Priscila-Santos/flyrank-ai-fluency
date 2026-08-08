@@ -77,11 +77,19 @@ I did not defend the original copy or push back on the reviewer's read. Where th
 
 > Fill in with the before/after once verified live — screenshots and short GIFs for the thread post.
 
-- [ ] Screenshot: `/work` page showing the new intro paragraph + `aiRole` badges.
-- [ ] Screenshot: browser tab / link-preview showing the new title before vs. after.
-- [ ] Screenshot: Home page showing single primary CTA.
-- [ ] Screenshot or link: Academic Planner card showing its new link/note.
-- [ ] Live URL re-confirmed working after deploy: https://priscila-portfolio.vercel.app/
+### Before Feedback
+
+| Home | Work Page | Academic Planner |
+|------|--------------|--------|
+| <img src="./audit-assets/before-feedback-link-home.png" alt="Home" width="250"/> | <img src="./audit-assets/before-feedback-work.png" alt="Work Page" width="250"/> | <img src="./audit-assets/before-feedback-academic-planner-link.png" alt="Academic Planner" width="250"/> |
+| *Home —  before the feedback* | *Work Page — before the feedback* | *Academic Planner — before the feedback* |
+
+### After Feedback
+
+| Home | Work Page | Academic Planner |
+|------|--------------|--------|
+| <img src="./audit-assets/after-feedback-link-home.png" alt="Home" width="250"/> | <img src="./audit-assets/after-feedback-work.png" alt="Work Page" width="250"/> | <img src="./audit-assets/after-feedback-academic-planner-link.png" alt="Academic Planner" width="250"/> |
+| *Home —  after the feedback* | *Work Page — after the feedback* | *Academic Planner — after the feedback* |
 
 ---
 
