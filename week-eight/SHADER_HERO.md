@@ -44,6 +44,27 @@ JS bundle at all; otherwise the WebGL canvas runs with `dpr` capped at 1.5
 and its render loop fully stopped (`frameloop="never"`) whenever the tab is
 hidden.
 
+## Performance fix after first deploy
+
+The first deployed version auto-upgraded to the shader canvas inside a
+plain `useEffect` on mount. A Lighthouse run on that deployment (mobile,
+Slow 4G) showed a real regression: **Total Blocking Time 5,750ms** and a
+**540ms render delay on the headline** (the page's actual LCP element),
+with the same chunk (`496...js`, the R3F/three.js bundle) showing up
+repeatedly in the long-task list for the entire trace — meaning the
+shader's render loop was competing with the headline paint from the
+first frame. This is the same root cause already documented and fixed
+for `/lab/3d` in `week-seven/AUDIT.md`, just newly reintroduced by the
+hero's auto-play behavior having no equivalent guard.
+
+**Fix:** the WebGL probe and the `import()` of the shader chunk are now
+deferred to `requestIdleCallback` (with a `setTimeout` fallback for
+Safari), so they only run once the browser has spare main-thread time —
+after first paint, not competing with it. The hero also now checks
+`useLowPowerContext` (previously only used by the 3D Lab) before
+auto-upgrading, so a slow connection or low-memory device stays on the
+static gradient even with WebGL support and no `prefers-reduced-motion`.
+
 ## Manual testing done
 
 - Chrome DevTools → Rendering → "Emulate CSS prefers-reduced-motion:
